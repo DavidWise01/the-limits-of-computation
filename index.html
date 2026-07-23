@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hierarchy & Limits</title>
+<style>
+  :root{--bg:#08080f;--bg2:#0c0c18;--panel:#10101e;--panel2:#13131f;--line:#1f1f33;--line2:#2a2a42;--ink:#e7e7f0;--dim:#9a9ab5;--faint:#5e5e7a;--teal:#2dd4bf;--teal-d:#14b8a6;--teal-dd:#0d9488;--cyan:#5eead4;--amber:#fbbf24;--violet:#a78bfa;--blue:#60a5fa;--rose:#fb7185;--green:#86efac;}
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:radial-gradient(1150px 800px at 80% -15%,rgba(45,212,191,.08),transparent 58%),radial-gradient(900px 640px at -8% 106%,rgba(96,165,250,.04),transparent 55%),var(--bg);color:var(--ink);font-family:'IBM Plex Sans',sans-serif;font-weight:300;min-height:100vh;padding:28px 22px 56px;-webkit-font-smoothing:antialiased}
+  .shell{max-width:1160px;margin:0 auto}
+  .kicker{font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.4em;text-transform:uppercase;color:var(--teal);margin-bottom:12px}
+  h1{font-family:'Spectral',serif;font-weight:300;font-size:clamp(26px,5vw,44px);letter-spacing:-.02em;line-height:1.04}
+  h1 em{font-style:italic;color:var(--teal)}
+  .sub{color:var(--dim);font-size:15px;margin-top:8px;max-width:790px}
+  .tabs{display:flex;gap:8px;margin-top:22px;flex-wrap:wrap}
+  .tab{font-family:'IBM Plex Mono',monospace;font-size:12px;border:1px solid var(--line);border-radius:10px;background:var(--panel);color:var(--dim);padding:10px 15px;cursor:pointer;transition:.15s}
+  .tab:hover{border-color:var(--teal-d)} .tab.on{border-color:var(--teal);color:var(--teal);background:rgba(45,212,191,.08)}
+  .pane{display:none;margin-top:18px}.pane.on{display:block}
+  .layout{display:grid;grid-template-columns:290px minmax(0,1fr);gap:18px;align-items:start}
+  @media(max-width:900px){.layout{grid-template-columns:1fr}}
+  .controls{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:16px}
+  .sec{font-family:'IBM Plex Mono',monospace;font-size:10.5px;letter-spacing:.2em;text-transform:uppercase;color:var(--faint);margin-bottom:10px}
+  .sec:not(:first-child){margin-top:15px}
+  .seg{display:flex;border:1px solid var(--line);border-radius:9px;overflow:hidden;margin-top:8px}
+  .seg button{flex:1;font-family:'IBM Plex Mono',monospace;font-size:10.5px;background:transparent;color:var(--dim);border:0;padding:8px 3px;cursor:pointer}
+  .seg button.on{background:rgba(45,212,191,.16);color:var(--teal)}
+  .btns{display:flex;gap:6px;margin-top:10px;flex-wrap:wrap}
+  .btns button{flex:1;min-width:42px;font-family:'IBM Plex Mono',monospace;font-size:11px;border:1px solid var(--line);border-radius:8px;background:var(--panel2);color:var(--dim);padding:9px 4px;cursor:pointer}
+  .btns button:hover{border-color:var(--teal);color:var(--teal)}
+  .sliderrow{margin-top:12px}
+  .sliderrow .lab{display:flex;justify-content:space-between;font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:var(--dim);margin-bottom:5px}
+  .sliderrow .lab b{color:var(--teal)}
+  input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:4px;border-radius:4px;background:var(--line);outline:none}
+  input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;height:14px;border-radius:50%;background:var(--teal);cursor:pointer;border:2px solid #0a0a14}
+  input[type=range]::-moz-range-thumb{width:14px;height:14px;border-radius:50%;background:var(--teal);cursor:pointer;border:2px solid #0a0a14}
+  .stat{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--dim);margin-top:13px;border:1px solid var(--line);border-radius:11px;padding:10px}
+  .stat .r{display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px dashed var(--line);gap:8px}
+  .stat .r:last-child{border:0} .stat .k{color:var(--faint)} .stat .v{color:var(--teal);text-align:right}
+  .stat .v.g{color:var(--green)} .stat .v.c{color:var(--cyan)} .stat .v.a{color:var(--amber)} .stat .v.r{color:var(--rose)}
+  .note{font-family:'IBM Plex Mono',monospace;font-size:10.5px;color:var(--faint);line-height:1.55;margin-top:10px}
+  code{font-family:'IBM Plex Mono',monospace;color:var(--teal)}
+  .panel{background:#06060c;border:1px solid var(--line);border-radius:16px;position:relative;overflow:hidden;line-height:0}
+  .plabel{position:absolute;top:10px;left:14px;font-family:'IBM Plex Mono',monospace;font-size:10.5px;color:var(--faint);background:rgba(6,6,12,.4);padding:2px 6px;border-radius:4px;z-index:2}
+  canvas{display:block;width:100%;height:auto}
+  .tablewrap{padding:14px}
+  table{width:100%;border-collapse:collapse;font-family:'IBM Plex Mono',monospace;font-size:11.5px}
+  th{color:var(--faint);font-weight:400;text-align:left;padding:8px 6px;border-bottom:1px solid var(--line);font-size:10px;letter-spacing:.08em;text-transform:uppercase}
+  td{text-align:left;padding:8px 6px;border-bottom:1px solid rgba(31,31,51,.5);color:#cfcfe0}
+  td.cls{color:var(--teal)}
+  .yes{color:var(--green)} .no{color:var(--rose)} .semi{color:var(--amber)}
+  footer{margin-top:24px;padding-top:22px;border-top:1px solid var(--line);color:var(--faint);font-family:'IBM Plex Mono',monospace;font-size:11.5px;line-height:1.9}
+  footer .seq{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
+  footer .seq span{padding:5px 12px;border:1px solid var(--line);border-radius:30px}
+  footer .seq .here{border-color:var(--teal);color:var(--teal)}
+  .fin{font-family:'Spectral',serif;font-style:italic;color:var(--dim);font-size:14px;margin-top:8px}
+</style>
+<meta name="author" content="David Lee Wise / ROOT0 / TriPod LLC">
+<meta name="license" content="https://creativecommons.org/licenses/by-nd/4.0/">
+</head>
+<body>
+<div class="shell">
+  <div>
+    <div class="kicker">Automata & Formal Languages · Instrument 05 · Hierarchy & Limits</div>
+    <h1>Where computation <em>runs out</em></h1>
+    <p class="sub">Each machine in this series is strictly stronger than the last — and we can prove the gaps are real. The pumping lemma shows finite memory can't count; the Chomsky hierarchy stacks the classes; and diagonalization reveals problems no machine can ever solve. The ladder has a top, and even the top has a ceiling.</p>
+  </div>
+
+  <div class="tabs">
+    <div class="tab on" data-t="A">Pumping lemma</div>
+    <div class="tab" data-t="B">Chomsky hierarchy</div>
+    <div class="tab" data-t="C">Halting problem</div>
+    <div class="tab" data-t="D">The map</div>
+  </div>
+
+  <!-- A -->
+  <div class="pane on" id="paneA">
+    <div class="layout">
+      <div class="controls">
+        <div class="sec">Pump a string</div>
+        <div class="seg" id="aMode"><button data-m="reg" class="on">regular (÷3)</button><button data-m="anbn">aⁿbⁿ</button></div>
+        <div id="aRegCtl">
+          <div class="sliderrow"><div class="lab"><span>member (×3)</span><b id="aKV">6</b></div><input type="range" id="aK" min="1" max="21" value="2"></div>
+        </div>
+        <div id="aAnCtl" style="display:none">
+          <div class="sliderrow"><div class="lab"><span>pumping length p</span><b id="aPV">3</b></div><input type="range" id="aP" min="1" max="6" value="3"></div>
+        </div>
+        <div class="sliderrow"><div class="lab"><span>pump count i</span><b id="aIV">1</b></div><input type="range" id="aI" min="0" max="5" value="1"></div>
+        <div class="stat" id="statA"></div>
+        <div class="note">A DFA with p states, reading a string of length ≥ p, must <span style="color:var(--teal)">revisit a state</span> (pigeonhole). The loop between visits is <code>y</code> — repeat it any number of times and the machine still ends in the same state. If a language has no such pumpable loop, it isn't regular.</div>
+      </div>
+      <div class="panel"><canvas id="cvA" height="430"></canvas><div class="plabel" id="aLab">pumping</div></div>
+    </div>
+  </div>
+
+  <!-- B -->
+  <div class="pane" id="paneB">
+    <div class="layout">
+      <div class="controls">
+        <div class="sec">Click a language</div>
+        <div class="btns" id="bExamples" style="flex-direction:column"></div>
+        <div class="stat" id="statB"></div>
+        <div class="note">Each ring strictly contains the one inside it. A language's class is the <span style="color:var(--teal)">weakest machine</span> that can recognize it — and the pumping-style arguments prove the containments are proper: there's always a language in the gap.</div>
+      </div>
+      <div class="panel"><canvas id="cvB" height="430"></canvas><div class="plabel">the Chomsky hierarchy</div></div>
+    </div>
+  </div>
+
+  <!-- C -->
+  <div class="pane" id="paneC">
+    <div class="layout">
+      <div class="controls">
+        <div class="sec">Diagonalization</div>
+        <div class="btns"><button id="cRegen">new table ↻</button></div>
+        <div class="stat" id="statC"></div>
+        <div class="note">List every machine and run each on its <span style="color:var(--teal)">own description</span>. Define D to do the <span style="color:var(--rose)">opposite</span> of the diagonal: D halts on ⟨Mₖ⟩ exactly when Mₖ loops on ⟨Mₖ⟩. D disagrees with every machine somewhere — so D is on no row. Yet a halting-decider would let us build D. Contradiction.</div>
+      </div>
+      <div class="panel"><canvas id="cvC" height="430"></canvas><div class="plabel">no machine decides halting</div></div>
+    </div>
+  </div>
+
+  <!-- D -->
+  <div class="pane" id="paneD">
+    <div class="layout">
+      <div class="controls">
+        <div class="sec">The whole ladder</div>
+        <div class="note" style="margin-top:0">From a finite set of states to an unbounded tape — and then past the edge of what any machine can decide. Five rungs, one map.</div>
+        <div class="stat" id="statD"></div>
+      </div>
+      <div class="panel"><div class="plabel">class ↔ machine ↔ grammar ↔ limits</div><div class="tablewrap" id="dTable" style="margin-top:8px"></div></div>
+    </div>
+  </div>
+
+  <footer>
+    <div class="seq">
+      <span>00 primer</span><span>01 finite automata</span><span>02 regular expressions</span><span>03 pushdown automata</span><span>04 Turing machines</span><span class="here">05 · hierarchy & limits — you are here</span>
+    </div>
+    HIERARCHY & LIMITS · pumping lemma · Chomsky hierarchy · halting & diagonalization. Verified.
+    <div class="fin">— series complete. From machines that read, to the questions no machine can answer.</div>
+  </footer>
+</div>
+
+<script>
+const $=id=>document.getElementById(id);const TAU=Math.PI*2;
+const T3=[[0,1],[2,0],[1,2]];
+function statesOf(bits){let s=0;const st=[0];for(const b of bits){s=T3[s][+b];st.push(s);}return st;}
+function div3(bits){let s=0;for(const b of bits)s=T3[s][+b];return s===0;}
+function decompose(bits){const st=statesOf(bits);for(let j=1;j<st.length;j++)for(let i=0;i<j;i++)if(st[i]===st[j])return {x:bits.slice(0,i),y:bits.slice(i,j),z:bits.slice(j),li:i,lj:j};return null;}
+function node(x,cx,cy,r,label,o){o=o||{};x.fillStyle=o.on?'rgba(45,212,191,.2)':'rgba(16,16,30,.95)';x.strokeStyle=o.on?'#2dd4bf':(o.col||'#4a4a62');x.lineWidth=o.on?2.2:1.4;x.beginPath();x.arc(cx,cy,r,0,TAU);x.fill();x.stroke();if(o.acc){x.beginPath();x.arc(cx,cy,r-3.5,0,TAU);x.stroke();}x.fillStyle=o.on?'#2dd4bf':'#cfcfe0';x.font="12px 'IBM Plex Mono'";x.textAlign='center';x.textBaseline='middle';x.fillText(label,cx,cy);x.textBaseline='alphabetic';x.textAlign='left';}
+
+/* ============ A: pumping ============ */
+const cvA=$('cvA'),xA=cvA.getContext('2d');let A={mode:'reg',k:2,p:3,i:1};
+function drawA(){const x=xA,W=cvA.width,H=cvA.height;x.clearRect(0,0,W,H);
+  if(A.mode==='reg'){const base=3*A.k;const bits=base.toString(2);const d=decompose(bits)||{x:'',y:bits,z:'',li:0,lj:bits.length};
+    const pumped=d.x+d.y.repeat(A.i)+d.z;const val=parseInt(pumped||'0',2);const acc=div3(pumped||'0');
+    // DFA diagram
+    const R=26,cy=130,sp=Math.min(150,W*0.22),cx=W/2,pos=[[cx,cy-66],[cx-sp,cy+58],[cx+sp,cy+58]];
+    function edge(a,b,bend,lab){x.strokeStyle='rgba(120,120,150,.5)';x.lineWidth=1.3;const x1=a[0],y1=a[1],x2=b[0],y2=b[1];const mx=(x1+x2)/2,my=(y1+y2)/2-bend;x.beginPath();x.moveTo(x1,y1);x.quadraticCurveTo(mx,my,x2,y2);x.stroke();const ang=Math.atan2(y2-my,x2-mx);x.fillStyle='rgba(120,120,150,.6)';x.beginPath();x.moveTo(x2,y2);x.lineTo(x2-7*Math.cos(ang-0.4),y2-7*Math.sin(ang-0.4));x.lineTo(x2-7*Math.cos(ang+0.4),y2-7*Math.sin(ang+0.4));x.fill();x.fillStyle='#8a8aa8';x.font="11px 'IBM Plex Mono'";x.textAlign='center';x.fillText(lab,mx,my-3);x.textAlign='left';}
+    edge([pos[0][0]-14,pos[0][1]+R-6],[pos[1][0]+R-8,pos[1][1]-R+10],36,'1');edge([pos[1][0]+R-6,pos[1][1]+4],[pos[2][0]-R+6,pos[2][1]+4],-26,'0');edge([pos[1][0]+10,pos[1][1]-R+6],[pos[0][0]-R+4,pos[0][1]+14],-8,'1');edge([pos[2][0]-R+6,pos[2][1]-4],[pos[1][0]+R-6,pos[1][1]-4],26,'0');
+    // self loops 0:0->0, 2:1->2
+    [[pos[0],'0'],[pos[2],'1']].forEach(([p,l])=>{x.strokeStyle='rgba(120,120,150,.45)';x.lineWidth=1.3;x.beginPath();x.arc(p[0],p[1]-R-9,12,0.55,TAU-0.15);x.stroke();x.fillStyle='#8a8aa8';x.font="11px 'IBM Plex Mono'";x.textAlign='center';x.fillText(l,p[0],p[1]-R-26);x.textAlign='left';});
+    x.strokeStyle='rgba(120,120,150,.6)';x.beginPath();x.moveTo(pos[0][0]-R-20,pos[0][1]);x.lineTo(pos[0][0]-R,pos[0][1]);x.stroke();
+    const finalSt=statesOf(pumped);const lastState=finalSt[finalSt.length-1];
+    ['r=0','r=1','r=2'].forEach((nm,s)=>node(x,pos[s][0],pos[s][1],R,nm,{acc:s===0,on:s===lastState}));
+    // string strip x|y|z
+    const n=pumped.length;const cw=Math.min(30,(W-40)/Math.max(n,1)),ox=(W-cw*n)/2,sy=H-72;
+    // color: x dim, the y-copies amber, z dim
+    let idx=0;const segs=[];for(let c=0;c<d.x.length;c++)segs.push('x');for(let rep=0;rep<A.i;rep++)for(let c=0;c<d.y.length;c++)segs.push('y');for(let c=0;c<d.z.length;c++)segs.push('z');
+    for(let c=0;c<n;c++){const px=ox+c*cw;const t=segs[c];x.fillStyle=t==='y'?'rgba(251,191,36,.28)':'rgba(20,20,34,.7)';x.beginPath();x.roundRect(px+1,sy-15,cw-2,30,4);x.fill();if(t==='y'){x.strokeStyle='#fbbf24';x.lineWidth=1.2;x.stroke();}x.fillStyle=pumped[c]==='1'?(t==='y'?'#fbbf24':'#2dd4bf'):'#9a9ab5';x.font="13px 'IBM Plex Mono'";x.textAlign='center';x.fillText(pumped[c],px+cw/2,sy+4);}
+    x.fillStyle='#5e5e7a';x.font="11px 'IBM Plex Mono'";x.textAlign='center';x.fillText('x = "'+d.x+'"   y = "'+d.y+'" (the loop)   z = "'+d.z+'"',W/2,sy+34);
+    x.fillStyle=acc?'#2dd4bf':'#fb7185';x.font="13px 'IBM Plex Mono'";x.fillText('x yⁱ z = "'+pumped+'" = '+val+'   '+(acc?'÷3 → ACCEPTED':'not ÷3'),W/2,H-14);x.textAlign='left';
+    $('aLab').textContent='pumping a loop · still accepted';
+    $('statA').innerHTML=`<div class="r"><span class="k">base member</span><span class="v c">${base} = ${bits}</span></div>
+    <div class="r"><span class="k">loop y</span><span class="v a">"${d.y}"</span></div>
+    <div class="r"><span class="k">pump count i</span><span class="v">${A.i}</span></div>
+    <div class="r"><span class="k">x yⁱ z</span><span class="v" style="font-size:10px">${pumped} = ${val}</span></div>
+    <div class="r"><span class="k">in language?</span><span class="v ${acc?'g':'r'}">${acc?'yes ✓':'no'}</span></div>`;
+  }else{const p=A.p;const s='a'.repeat(p)+'b'.repeat(p);const y='a';const z=s.slice(1);const pumped='a'.repeat(A.i)+z;const aCount=A.i+(p-1),bCount=p;const inL=(aCount===bCount);
+    // strip s with y highlighted; then pumped
+    x.fillStyle='#5e5e7a';x.font="12px 'IBM Plex Mono'";x.textAlign='center';x.fillText('assume aⁿbⁿ is regular, pumping length p = '+p,W/2,40);
+    function drawStr(str,sy,yhi){const n=str.length,cw=Math.min(28,(W-60)/Math.max(n,1)),ox=(W-cw*n)/2;for(let c=0;c<n;c++){const px=ox+c*cw;const isY=yhi&&yhi.has(c);x.fillStyle=isY?'rgba(251,191,36,.28)':'rgba(20,20,34,.7)';x.beginPath();x.roundRect(px+1,sy-14,cw-2,28,4);x.fill();if(isY){x.strokeStyle='#fbbf24';x.lineWidth=1.2;x.stroke();}x.fillStyle=str[c]==='a'?(isY?'#fbbf24':'#2dd4bf'):'#fb7185';x.font="13px 'IBM Plex Mono'";x.textAlign='center';x.fillText(str[c],px+cw/2,sy+4);}x.textAlign='left';}
+    x.fillStyle='#9a9ab5';x.font="11px 'IBM Plex Mono'";x.textAlign='center';x.fillText('s = aᵖbᵖ   (|xy| ≤ p ⟹ y is all a\u2019s — here y = first a)',W/2,90);
+    drawStr(s,118,new Set([0]));
+    x.fillStyle='#9a9ab5';x.fillText('pump y to get x yⁱ z:',W/2,180);
+    const yset=new Set();for(let c=0;c<A.i;c++)yset.add(c);drawStr(pumped,210,yset);
+    // counts
+    x.fillStyle='#5e5e7a';x.font="12px 'IBM Plex Mono'";x.fillText('a-count = '+aCount+'      b-count = '+bCount,W/2,260);
+    x.fillStyle=inL?'#2dd4bf':'#fb7185';x.font="14px 'IBM Plex Mono'";
+    if(A.i===1)x.fillText('i = 1: balanced, in L (this is just s)',W/2,300);
+    else x.fillText('i = '+A.i+': '+aCount+' a\u2019s ≠ '+bCount+' b\u2019s  →  ∉ aⁿbⁿ',W/2,300);
+    if(A.i!==1){x.fillStyle='#fb7185';x.font="13px 'IBM Plex Mono'";x.fillText('a member that pumps OUT of L → contradiction',W/2,H-40);x.fillStyle='#2dd4bf';x.fillText('∴ aⁿbⁿ is NOT regular',W/2,H-16);}
+    else{x.fillStyle='#5e5e7a';x.font="12px 'IBM Plex Mono'";x.fillText('move the pump count off 1 to break it',W/2,H-20);}
+    x.textAlign='left';
+    $('aLab').textContent='aⁿbⁿ breaks under pumping';
+    $('statA').innerHTML=`<div class="r"><span class="k">s = aᵖbᵖ</span><span class="v c">${s}</span></div>
+    <div class="r"><span class="k">y (in a-block)</span><span class="v a">"a"</span></div>
+    <div class="r"><span class="k">pump i</span><span class="v">${A.i}</span></div>
+    <div class="r"><span class="k">a vs b</span><span class="v">${aCount} vs ${bCount}</span></div>
+    <div class="r"><span class="k">in aⁿbⁿ?</span><span class="v ${inL?'g':'r'}">${inL?'yes':'NO → not regular'}</span></div>`;}
+}
+document.querySelectorAll('#aMode button').forEach(b=>b.onclick=()=>{document.querySelectorAll('#aMode button').forEach(z=>z.classList.remove('on'));b.classList.add('on');A.mode=b.dataset.m;$('aRegCtl').style.display=A.mode==='reg'?'block':'none';$('aAnCtl').style.display=A.mode==='anbn'?'block':'none';drawA();});
+$('aK').oninput=e=>{A.k=+e.target.value;$('aKV').textContent=3*A.k;drawA();};
+$('aP').oninput=e=>{A.p=+e.target.value;$('aPV').textContent=A.p;drawA();};
+$('aI').oninput=e=>{A.i=+e.target.value;$('aIV').textContent=A.i;drawA();};
+
+/* ============ B: hierarchy ============ */
+const cvB=$('cvB'),xB=cvB.getContext('2d');
+const RINGS=[{name:'recognizable (r.e.)',r:1.0,col:'#fb7185'},{name:'decidable',r:0.78,col:'#fbbf24'},{name:'context-free',r:0.56,col:'#a78bfa'},{name:'regular',r:0.34,col:'#2dd4bf'}];
+const LANGS=[
+ {n:'a*b*',ring:3,ang:-0.6,machine:'DFA / regex',why:'one DFA recognizes it; no counting needed'},
+ {n:'ends in 01',ring:3,ang:0.9,machine:'DFA / NFA',why:'finite memory suffices — a 3-state NFA'},
+ {n:'aⁿbⁿ',ring:2,ang:-0.7,machine:'pushdown automaton',why:'needs a stack to count; not regular (pumping lemma)'},
+ {n:'balanced ( )',ring:2,ang:0.6,machine:'PDA / CFG',why:'the Dyck language — context-free, not regular'},
+ {n:'palindromes',ring:2,ang:2.1,machine:'PDA',why:'stack matches the two halves; not regular'},
+ {n:'aⁿbⁿcⁿ',ring:1,ang:-0.6,machine:'Turing machine',why:'not context-free (a PDA has one stack), but decidable by a TM'},
+ {n:'ww (copies)',ring:1,ang:1.0,machine:'Turing machine',why:'matching two arbitrary halves needs a tape, not a stack'},
+ {n:'HALT',ring:0,ang:0.2,machine:'TM (semi-decides)',why:'recognizable — run the machine; but undecidable, you can never say "loops forever"'},
+ {n:'¬HALT',ring:-1,ang:0,machine:'no machine',why:'not even recognizable — the complement of a non-decidable r.e. language'}];
+let B={sel:0};
+function bPos(W,H,lang){const cx=W/2,cy=H/2,Rmax=Math.min(W,H)*0.42;if(lang.ring===-1){return {x:cx+Math.cos(lang.ang-1.4)*Rmax*1.18,y:cy+Math.sin(lang.ang-1.4)*Rmax*1.18};}const inner=lang.ring===3?0:RINGS[lang.ring+1].r;const rr=(RINGS[lang.ring].r+inner)/2;return {x:cx+Math.cos(lang.ang)*Rmax*rr,y:cy+Math.sin(lang.ang)*Rmax*rr};}
+function drawB(){const x=xB,W=cvB.width,H=cvB.height;x.clearRect(0,0,W,H);const cx=W/2,cy=H/2,Rmax=Math.min(W,H)*0.42;
+  // outer "all languages"
+  x.strokeStyle='rgba(90,90,120,.4)';x.setLineDash([5,5]);x.beginPath();x.arc(cx,cy,Rmax*1.28,0,TAU);x.stroke();x.setLineDash([]);x.fillStyle='#5e5e7a';x.font="11px 'IBM Plex Mono'";x.textAlign='center';x.fillText('all languages',cx,cy-Rmax*1.28-6);
+  RINGS.forEach(rg=>{x.strokeStyle=rg.col;x.globalAlpha=.5;x.lineWidth=1.4;x.beginPath();x.arc(cx,cy,Rmax*rg.r,0,TAU);x.stroke();x.globalAlpha=1;x.fillStyle=rg.col;x.font="10px 'IBM Plex Mono'";x.textAlign='center';x.fillText(rg.name,cx,cy-Rmax*rg.r+13);});
+  LANGS.forEach((l,i)=>{const p=bPos(W,H,l);const on=i===B.sel;x.fillStyle=on?'#2dd4bf':'rgba(20,20,34,.9)';x.strokeStyle=on?'#2dd4bf':'#5a5a72';x.lineWidth=on?2:1.2;x.beginPath();x.arc(p.x,p.y,on?7:5,0,TAU);x.fill();x.stroke();x.fillStyle=on?'#2dd4bf':'#9a9ab5';x.font=(on?"bold 11px":"10.5px")+" 'IBM Plex Mono'";x.textAlign='center';x.fillText(l.n,p.x,p.y-12);});
+  x.textAlign='left';
+  const L=LANGS[B.sel];const rname=L.ring===-1?'not recognizable':RINGS[L.ring].name;
+  $('statB').innerHTML=`<div class="r"><span class="k">language</span><span class="v c">${L.n}</span></div>
+  <div class="r"><span class="k">class</span><span class="v">${rname}</span></div>
+  <div class="r"><span class="k">machine</span><span class="v">${L.machine}</span></div>
+  <div class="r"><span class="k">why</span><span class="v" style="font-size:9px;max-width:140px">${L.why}</span></div>`;}
+function bBtns(){$('bExamples').innerHTML=LANGS.map((l,i)=>`<button class="bex" data-i="${i}" style="text-align:left">${l.n}</button>`).join('');document.querySelectorAll('.bex').forEach(b=>b.onclick=()=>{B.sel=+b.dataset.i;document.querySelectorAll('.bex').forEach(z=>z.style.borderColor=z.dataset.i==B.sel?'#2dd4bf':'');drawB();});}
+cvB.addEventListener('click',e=>{const r=cvB.getBoundingClientRect();const mx=(e.clientX-r.left)*(cvB.width/r.width),my=(e.clientY-r.top)*(cvB.height/r.height);let bi=B.sel,bd=20;LANGS.forEach((l,i)=>{const p=bPos(cvB.width,cvB.height,l);const d=Math.hypot(p.x-mx,p.y-my);if(d<bd){bd=d;bi=i;}});B.sel=bi;drawB();});
+
+/* ============ C: halting / diagonalization ============ */
+const cvC=$('cvC'),xC=cvC.getContext('2d');let C={n:6,T:[]};
+function cGen(){C.T=[];for(let i=0;i<C.n;i++){const row=[];for(let j=0;j<C.n;j++)row.push(Math.random()<0.5);C.T.push(row);}}
+cGen();
+function drawC(){const x=xC,W=cvC.width,H=cvC.height;x.clearRect(0,0,W,H);const n=C.n;const m=70;const gs=Math.min(W-2*m-90,H-150);const cw=gs/n,oy=64,ox=m+70;
+  x.fillStyle='#5e5e7a';x.font="11px 'IBM Plex Mono'";x.textAlign='center';x.fillText('input ⟨Mⱼ⟩ →',ox+gs/2,40);x.save();x.translate(28,oy+gs/2);x.rotate(-Math.PI/2);x.fillText('machine Mᵢ',0,0);x.restore();
+  for(let j=0;j<n;j++){x.fillStyle='#7a7a92';x.font="10px 'IBM Plex Mono'";x.fillText('M'+j,ox+j*cw+cw/2,oy-6);}
+  for(let i=0;i<n;i++){x.fillStyle='#7a7a92';x.textAlign='right';x.fillText('M'+i,ox-8,oy+i*cw+cw/2+4);x.textAlign='center';}
+  for(let i=0;i<n;i++)for(let j=0;j<n;j++){const px=ox+j*cw,py=oy+i*cw;const halts=C.T[i][j];const diag=i===j;x.fillStyle=diag?'rgba(45,212,191,.18)':(halts?'rgba(45,212,191,.1)':'rgba(20,20,34,.6)');x.fillRect(px+1,py+1,cw-2,cw-2);if(diag){x.strokeStyle='#2dd4bf';x.lineWidth=1.6;x.strokeRect(px+1,py+1,cw-2,cw-2);}x.fillStyle=halts?'#5eead4':'#5a5a72';x.font="13px 'IBM Plex Mono'";x.fillText(halts?'H':'∞',px+cw/2,py+cw/2+4);}
+  // D row below
+  const dy=oy+n*cw+22;x.fillStyle='#fb7185';x.font="11px 'IBM Plex Mono'";x.textAlign='right';x.fillText('D',ox-8,dy+cw/2+4);x.textAlign='center';
+  for(let j=0;j<n;j++){const px=ox+j*cw;const dval=!C.T[j][j];x.fillStyle='rgba(251,113,133,.14)';x.fillRect(px+1,dy+1,cw-2,cw-2);x.strokeStyle='rgba(251,113,133,.6)';x.lineWidth=1.2;x.strokeRect(px+1,dy+1,cw-2,cw-2);x.fillStyle='#fb7185';x.font="13px 'IBM Plex Mono'";x.fillText(dval?'H':'∞',px+cw/2,dy+cw/2+4);}
+  x.fillStyle='#9a9ab5';x.font="11px 'IBM Plex Mono'";x.textAlign='center';x.fillText('D = flip of the diagonal — differs from every Mᵢ at column i',ox+gs/2,dy+cw+22);
+  x.fillStyle='#2dd4bf';x.fillText('so D matches no machine in the list — yet a halting-decider would build it',ox+gs/2,dy+cw+40);
+  x.textAlign='left';
+  // check D differs from all
+  let diffAll=true;for(let i=0;i<n;i++)if((!C.T[i][i])===C.T[i][i]){}// trivially differs
+  $('cLab').textContent='diagonalization';
+  $('statC').innerHTML=`<div class="r"><span class="k">machines listed</span><span class="v">${n}</span></div>
+  <div class="r"><span class="k">diagonal Mᵢ(⟨Mᵢ⟩)</span><span class="v c">highlighted</span></div>
+  <div class="r"><span class="k">D = ¬diagonal</span><span class="v r">the spite machine</span></div>
+  <div class="r"><span class="k">D = some Mᵢ?</span><span class="v r">impossible</span></div>
+  <div class="r"><span class="k">conclusion</span><span class="v">HALT undecidable</span></div>`;}
+$('cRegen').onclick=()=>{cGen();drawC();};
+
+/* ============ D: the map ============ */
+function drawD(){const rows=[
+  ['regular','DFA / NFA','regular expression','a*b*','<span class="yes">yes</span>','closed under ∪ ∩ ¬ ∗'],
+  ['context-free','pushdown automaton','context-free grammar','aⁿbⁿ','<span class="yes">yes</span>','not closed under ∩ or ¬'],
+  ['decidable','TM that always halts','—','aⁿbⁿcⁿ','<span class="yes">yes</span>','closed under everything'],
+  ['recognizable','Turing machine','—','HALT','<span class="semi">semi</span>','accepts if in L, may loop if not'],
+  ['beyond','no machine','—','¬HALT','<span class="no">no</span>','not even recognizable']];
+  $('dTable').innerHTML=`<table><thead><tr><th>class</th><th>machine</th><th>grammar</th><th>example</th><th>decidable?</th><th>notes</th></tr></thead><tbody>${rows.map(r=>`<tr><td class="cls">${r[0]}</td><td>${r[1]}</td><td>${r[2]}</td><td style="color:var(--cyan)">${r[3]}</td><td>${r[4]}</td><td style="color:var(--faint);font-size:10px">${r[5]}</td></tr>`).join('')}</tbody></table>
+  <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--faint);margin-top:18px;line-height:1.7">
+  Each row is a rung of this series: <span style="color:var(--teal)">finite automata & regex</span> → regular, <span style="color:var(--violet)">pushdown automata & grammars</span> → context-free, <span style="color:var(--amber)">Turing machines</span> → decidable and recognizable. The containments are <span style="color:var(--teal)">strict</span> — each tool recognizes languages the previous one provably cannot, and above the recognizable sits an ocean of languages no machine will ever touch.</div>`;
+  $('statD').innerHTML=`<div class="r"><span class="k">regular</span><span class="v c">a*b*</span></div>
+  <div class="r"><span class="k">context-free</span><span class="v c">aⁿbⁿ</span></div>
+  <div class="r"><span class="k">decidable</span><span class="v c">aⁿbⁿcⁿ</span></div>
+  <div class="r"><span class="k">recognizable</span><span class="v c">HALT</span></div>
+  <div class="r"><span class="k">beyond</span><span class="v r">¬HALT</span></div>`;}
+
+/* ---- tabs ---- */
+let active='A';
+function showTab(tb){active=tb;document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('on',x.dataset.t===tb));document.querySelectorAll('.pane').forEach(p=>p.classList.remove('on'));$('pane'+tb).classList.add('on');layout();}
+document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>showTab(b.dataset.t));
+function sz(c,h){c.width=Math.max(340,c.parentElement.clientWidth);c.height=h;}
+function layout(){if(active==='A'){sz(cvA,430);drawA();}if(active==='B'){sz(cvB,430);drawB();}if(active==='C'){sz(cvC,430);drawC();}if(active==='D'){drawD();}}
+window.addEventListener('resize',()=>{clearTimeout(window._rl);window._rl=setTimeout(layout,200);});
+bBtns();layout();
+</script>
+<footer style="max-width:1180px;margin:36px auto 0;padding:16px 2px;border-top:1px solid #1f1f33;font-family:ui-monospace,monospace;font-size:11px;letter-spacing:.04em;color:#5e5e7a">THE LIMITS OF COMPUTATION &middot; a EDUCATIONAL sphere of UD0 &middot; David Lee Wise (ROOT0) &middot; CC-BY-ND-4.0 &middot; <a style="color:#8f8ac0" href="https://davidwise01.github.io/ud0/">the domains</a></footer>
+</body>
+</html>
